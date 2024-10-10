@@ -1,6 +1,6 @@
-# FlexiHook
+# [FlexiHook](https://github.com/DeHby/FlexiHook)
 
-这是一个基于minhook封装的hook库，支持普通函数、类方法、虚函数（理论支持）、任意上下文（ContextHook 类型Frida interceptor）的Hook方式
+这是一个基于minhook封装的hook库，支持普通函数、类方法、虚函数（理论支持）、任意上下文（ContextHook 类似Frida interceptor）Hook方式
 
 ContextHook的方式目前暂不支持修改ESP/RSP寄存器
 
@@ -21,19 +21,19 @@ ContextHook的方式目前暂不支持修改ESP/RSP寄存器
 static ProxyHook<decltype(MessageBoxA)> s_hookInstace;
 
 int WINAPI MyMessageBoxW(
-	_In_opt_ HWND hWnd,
-	_In_opt_ LPCWSTR lpText,
-	_In_opt_ LPCWSTR lpCaption,
-	_In_ UINT uType)
+    _In_opt_ HWND hWnd,
+    _In_opt_ LPCWSTR lpText,
+    _In_opt_ LPCWSTR lpCaption,
+    _In_ UINT uType)
 {
-	return s_hookInstace.Invoke(hWnd, L"测试拦截", lpCaption, uType);
+    return s_hookInstace.Invoke(hWnd, L"测试拦截", lpCaption, uType);
 }
 
 void main()
 {
-  MinHook::Initialize();
-	s_hookInstace.Install(MessageBoxW, MyMessageBoxW);
-	s_hookInstace.Enable();
+    MinHook::Initialize();
+    s_hookInstace.Install(MessageBoxW, MyMessageBoxW);
+    s_hookInstace.Enable();
 }
 ```
 
@@ -44,45 +44,45 @@ void main()
 class TestClass
 {
 public:
-	int num;
+    int num;
 
-	int add(int n)
-	{
-		return (num += n);
-	}
+    int add(int n)
+    {
+        return (num += n);
+    }
 };
 
 class TestHookManager {
 private:
-	static auto& GetInstace()
-	{
-		static ProxyHook<decltype(&MyClass::myAdd)> instace;
-		return instace;
-	}
+    static auto& GetInstace()
+    {
+        static ProxyHook<decltype(&MyClass::myAdd)> instace;
+        return instace;
+    }
 
-	class MyClass
-	{
-	public:
-		//unknow
-		int myAdd(int n)
-		{
-			return GetInstace().Invoke(this, 55);
-		}
-	};
+    class MyClass
+    {
+    public:
+        //unknow
+        int myAdd(int n)
+        {
+            return GetInstace().Invoke(this, 55);
+        }
+    };
 public:
-	static void Install()
-	{
-		GetInstace().Install(&TestClass::add, &MyClass::myAdd);
-		GetInstace().Enable();
-	}
+    static void Install()
+    {
+        GetInstace().Install(&TestClass::add, &MyClass::myAdd);
+        GetInstace().Enable();
+    }
 };
 
 
 void main()
 {
       TestClass a1{};
-			TestHookManager::Install();
-			int ret = a1.add(100); // return 55
+      TestHookManager::Install();
+      int ret = a1.add(100); // return 55
 }
 ```
 
@@ -94,14 +94,13 @@ void main()
 void main()
 {
       MinHook::Initialize();
-
-			ctxHook.Install(MessageBoxW, [](ThreadContext& ctx) {
-				static std::wstring str(reinterpret_cast<wchar_t*>(ctx.RDX.pu));
-				str.append(L"Kai");
-				ctx.RDX.pu = (unsigned char*)str.data();
-				return true;
-				});
-			ctxHook.Enable();
+      ctxHook.Install(MessageBoxW, [](ThreadContext& ctx) {
+      static std::wstring str(reinterpret_cast<wchar_t*>(ctx.RDX.pu));
+        str.append(L"Kai");
+        ctx.RDX.pu = (unsigned char*)str.data();
+        return true;
+      });
+      ctxHook.Enable();
 }
 ```
 
@@ -113,13 +112,12 @@ void main()
 void main()
 {
       MinHook::Initialize();
-
-			ctxHook.Install(MessageBoxW, [](ThreadContext& ctx) {
-				static std::wstring str(*reinterpret_cast<wchar_t**>(const_cast<uint8_t*>(ctx.ESP.pu + 8)));
-				str.append(L"Kai");
-				pointer_set(ctx.ESP.dw + 8, str.data());
-				return true;
-				});
-			ctxHook.Enable();
+      ctxHook.Install(MessageBoxW, [](ThreadContext& ctx) {
+      static std::wstring str(*reinterpret_cast<wchar_t**>(const_cast<uint8_t*>(ctx.ESP.pu + 8)));
+        str.append(L"Kai");
+        pointer_set(ctx.ESP.dw + 8, str.data());
+        return true;
+      });
+      ctxHook.Enable();
 }
 ```
