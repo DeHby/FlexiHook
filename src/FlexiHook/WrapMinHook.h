@@ -2,7 +2,7 @@
 #define __MINHOOK_HEADER__
 
 #include <shared_mutex>
-#include "minhook/MinHook.h"
+#include "MinHook.h"
 
 class MinHook {
 private:

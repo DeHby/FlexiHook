@@ -1,4 +1,4 @@
-﻿#include "MinHook.h"
+﻿#include "WrapMinHook.h"
 
 bool MinHook::_init = false;
 std::shared_mutex MinHook::_mutex;

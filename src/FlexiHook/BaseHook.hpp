@@ -1,7 +1,7 @@
 ﻿#ifndef __BASE_HOOK_HEADER__
 #define __BASE_HOOK_HEADER__
 
-#include "MinHook.h"
+#include "WrapMinHook.h"
 
 class BaseHook {
 protected:
