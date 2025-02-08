@@ -1,0 +1,108 @@
+﻿#ifndef __X64_BUILDER_DEF_HEADER__
+#define __X64_BUILDER_DEF_HEADER__
+
+#include <cstdint>
+#include <wtypes.h>
+#include <winnt.h>
+struct ThreadContext
+{
+	union Register {
+		DWORD_PTR dw;
+		void* pv;
+		uint8_t* pu;
+	};
+	union ObserverRegister {
+		const DWORD_PTR dw;
+		const void* pv;
+		const uint8_t* pu;
+	};
+
+	Register RAX;
+	Register RCX;
+	Register RDX;
+	Register RBX;
+	ObserverRegister RSP;
+	Register RBP;
+	Register RSI;
+	Register RDI;
+	Register R8;
+	Register R9;
+	Register R10;
+	Register R11;
+	Register R12;
+	Register R13;
+	Register R14;
+	Register R15;
+
+	DWORD64 RFlags;
+};
+
+
+
+static constexpr size_t OFFSET_SELF = 61;
+static constexpr size_t OFFSET_HANDLE = 74;
+static constexpr size_t OFFSET_ORIGINAL = 156;
+static const std::uint8_t BYTE_SHELLCODE[] = {
+  0x9C,														 //	pushfq
+  0x41, 0x57,												 //	push r15
+  0x41, 0x56,												 // push r14
+  0x41, 0x55,												 // push r13
+  0x41, 0x54,												 // push r12
+  0x41, 0x53,												 // push r11
+  0x41, 0x52,												 // push r10
+  0x41, 0x51,												 // push r9
+  0x41, 0x50,												 // push r8
+  0x57,														 // push rdi
+  0x56,														 // push rsi
+  0x55,														 // push rbp
+  0x48, 0x8D, 0x74, 0x24, 0x58,								 // lea rsi,[rsp+0x58]  : push rsp
+  0x56,														 // push rsi
+  0x53,														 // push rbx
+  0x52,														 // push rdx
+  0x51,														 // push rcx
+  0x50,														 // push rax
+  0x48, 0x81, 0xEC, 0x88, 0x00, 0x00, 0x00,					 // sub rsp,0x88
+  0x48, 0xC7, 0xC1, 0x11, 0x00, 0x00, 0x00,					 // mov rcx,0x11
+  0x48, 0x89, 0xE7,											 // mov rdi,rsp
+  0x48, 0x8D, 0xB4, 0x24, 0x88, 0x00, 0x00, 0x00,			 // lea rsi,[rsp+0x88]
+  0xFC,														 // cld
+  0xF3, 0x48, 0xA5,											 // rep movsq
+  0x48, 0xB9, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,// mov rcx,$this
+  0x48, 0x89, 0xE2,											 // mov rdx,rsp
+  0x48, 0xB8, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,// mov rax,$handle
+  0x48, 0x83, 0xEC, 0x30,									 //	sub rsp,48         : HomeSpace(32) + retaddr(8) + align(8)
+  0xFF, 0xD0,												 // call rax
+  0x48, 0x83, 0xC4, 0x30,									 //	add rsp,48
+  0x3C, 0x01,												 // cmp al,1
+  0x75, 0x16,												 // short jne $exit
+  0x48, 0xC7, 0xC1, 0x11, 0x00, 0x00, 0x00,					 // mov rcx,0x11
+  0x48, 0x8D, 0xBC, 0x24, 0x88, 0x00, 0x00, 0x00,			 // lea rdi,[rsp+0x88]
+  0x48, 0x89, 0xE6,											 // mov rsi,rsp
+  0xFC,														 // cld
+  0xF3, 0x48, 0xA5,											 // rep movsq
+  // exit:
+  0x48, 0x81, 0xC4, 0x88, 0x00, 0x00, 0x00,					 // add rsp,0x88
+  0x58,														 // pop rax
+  0x59,														 // pop rcx
+  0x5A,														 // pop rdx
+  0x5B,														 // pop rbx
+  0x5D,														 // pop rbp			: pop rsp
+  0x5D,														 // pop rbp
+  0x5E,														 // pop rsi
+  0x5F,														 // pop rdi
+  0x41, 0x58,												 // pop r8
+  0x41, 0x59,												 // pop r9
+  0x41, 0x5A,												 // pop r10
+  0x41, 0x5B,												 // pop r11
+  0x41, 0x5C,												 // pop r12
+  0x41, 0x5D,												 // pop r13
+  0x41, 0x5E,												 // pop r14
+  0x41, 0x5F,												 // pop r15
+  0x9D,														 // popfq
+  0xFF, 0x25, 0x00, 0x00, 0x00, 0x00,						 // jmp qword ptr [rip + 0x0]
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00			 // $origin
+};
+
+
+
+#endif
